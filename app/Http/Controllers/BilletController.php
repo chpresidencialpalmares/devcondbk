@@ -32,7 +32,7 @@ class BilletController extends Controller
             $array['list'] = $billets;
                 
             }else {
-                $array['eror'] = 'Esta unidade não é sua';
+                $array['error'] = 'Esta unidade não é sua';
             }
 
         } else {

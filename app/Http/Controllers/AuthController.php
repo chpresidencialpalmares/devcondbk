@@ -70,7 +70,7 @@ class AuthController extends Controller
             $array['user']['properties'] = $properties;
 
         } else {
-            $array['eror'] = $validator->errors()->first();
+            $array['error'] = $validator->errors()->first();
             return $array;
         }
 
