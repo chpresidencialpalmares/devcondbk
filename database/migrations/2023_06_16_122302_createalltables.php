@@ -113,7 +113,16 @@ return new class extends Migration
             $table->integer('id_area');
             $table->datetime('reservation_date');
         });
-       
+        Schema::table('openingserviceorder', function(Blueprint $table) {
+            $table->id();
+            $table->integer('id_unit');
+            $table->string('status');             
+            $table->string('problemdescription',);
+            $table->string('photos');
+            $table->date('datecreated');
+            $table->string('problemtype');
+            $table->string('sector');
+        });
     }
 
     /**

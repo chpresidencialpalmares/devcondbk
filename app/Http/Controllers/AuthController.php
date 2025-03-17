@@ -12,8 +12,6 @@ use App\Models\User;
 use App\Models\Unit;
 
 
-
-
 class AuthController extends Controller
 {
     public function unauthorized() {
@@ -48,6 +46,7 @@ class AuthController extends Controller
             $newUser->password = $hash;
             $newUser->save();
 
+            //apos o registro, ja faz o login
             $token = auth()->attempt([
                 'cpf' => $cpf,
                 'password' => $password

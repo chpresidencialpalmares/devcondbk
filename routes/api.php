@@ -12,6 +12,9 @@ use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WallController;
 use App\Http\Controllers\WarningController;
+use App\Http\Controllers\OpeningServiceOrderController;
+
+
 
 Route::get('/ping', function(){
     return ['pongo'=>true];
@@ -64,6 +67,11 @@ Route::middleware('auth:api')->group(function(){
 
     Route::get('/myreservations', [ReservationController::class, 'getMyReservations']);
     Route::delete('/myreservation/{id}', [ReservationController::class, 'delMyReservation']);
+
+    //Ordem de serviço
+    Route::get('/openingserviceorders', [OpeningServiceOrderController::class, 'getMyOpeningServiceOrders']);
+    Route::post('/openingserviceorder', [OpeningServiceOrderController::class, 'setOpeningServiceOrder']);
+    Route::post('/openingserviceorder/file', [OpeningServiceOrderController::class, 'addOpeningServiceOrderFile']);
 
     //teste
 });
