@@ -6,22 +6,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
-
 use App\Models\OpeningServiceOrder;
 use App\Models\Unit;
-
-//use App\Http\Controllers\Controller;
-
-
 
 class OpeningServiceOrderController extends Controller
 {
     //
     public function getMyOpeningServiceOrders(Request $request) {
-        $array = ['error' => 'Not implemented yet'];
+        $array = ['error' => ''];
         
         $property = $request->input('property');
         if ($property) {
+            $user = auth()->user();
             $unit = Unit::where('id', $property)->where('id_owner', $user['id'])->count();
             if ($unit > 0) {
                 $openingServiceOrders = OpeningServiceOrder::where('id_unit', $property)
@@ -56,10 +52,15 @@ class OpeningServiceOrderController extends Controller
         ]);
         if (!$validator->fails()) {
             $file = $request->file('photo')->store('public');
+            /*
             $file = explode('public/', $file);
             $array['photo'] = $file[1];
+            */
+            $array['photo'] = asset(Storage::url($file));
+
         } else {
             $array['error'] = $validator->errors()->first();
+            return $array;
         }
         
         return $array;
@@ -68,39 +69,62 @@ class OpeningServiceOrderController extends Controller
     public function setOpeningServiceOrder(Request $request) {
         $array = ['error' => ''];
         $validator = Validator::make($request->all(), [
-            'title' => 'required',
-            'property' => 'required'
+            'problemdescription' => 'required',
+            'property' => 'required',
+            'problemtype' => 'required',
+            'sector' => 'required'
         ]);
         if (!$validator->fails()) {
-            $title = $request->input('title');
+            $problemdescription = $request->input('problemdescription');
             $property = $request->input('property');
             $list = $request->input('list');
+            $problemtype = $request->input('problemtype');
+            $sector = $request->input('sector');
+
             $newOpeningServiceOrder = new OpeningServiceOrder();
+
             $newOpeningServiceOrder->id_unit = $property;
-            $newOpeningServiceOrder->title = $title;
+            $newOpeningServiceOrder->problemdescription = $problemdescription;
             $newOpeningServiceOrder->status = 'IN_REVIEW';
             $newOpeningServiceOrder->datecreated = date('Y-m-d');
-            $newOpeningServiceOrder->save();
+
+            $newOpeningServiceOrder->problemtype = $problemtype;
+            $newOpeningServiceOrder->sector = $sector;
+
+
+            //$newOpeningServiceOrder->save();
             if ($list && is_array($list)) {
+                $photos = [];
+
                 foreach ($list as $listItem) {
-                    $newOpeningServiceOrderItem = new OpeningServiceOrderItem();
-                    $newOpeningServiceOrderItem->id_opening_service_order = $newOpeningServiceOrder->id;
-                    $newOpeningServiceOrderItem->description = $listItem['description'];
-                    $newOpeningServiceOrderItem->status = 'IN_REVIEW';
-                    $newOpeningServiceOrderItem->save();
-                    if (isset($listItem['photos']) && is_array($listItem['photos'])) {
-                        $photos = [];
-                        foreach ($listItem['photos'] as $photo) {
-                            $url = explode('storage/', $photo);
-                            $photos[] = $url[1];
-                        }
-                        $newOpeningServiceOrderItem->photos = implode(',', $photos);
-                        $newOpeningServiceOrderItem->save();
-                    }
+                    $url = explode('/', $listItem);
+                    $photos[] = end($url);
                 }
+                $newOpeningServiceOrder->photos = implode(',', $photos);
+            } else {
+                $newOpeningServiceOrder->photos = '';
             }
+            $newOpeningServiceOrder->save();
+        
+            /*
+            $newOpeningServiceOrderItem = new OpeningServiceOrderItem();
+            $newOpeningServiceOrderItem->id_opening_service_order = $newOpeningServiceOrder->id;
+            $newOpeningServiceOrderItem->description = $listItem['description'];
+            $newOpeningServiceOrderItem->status = 'IN_REVIEW';
+            $newOpeningServiceOrderItem->save();
+            if (isset($listItem['photos']) && is_array($listItem['photos'])) {
+                $photos = [];
+                foreach ($listItem['photos'] as $photo) {
+                    $url = explode('storage/', $photo);
+                    $photos[] = $url[1];
+                }
+                $newOpeningServiceOrderItem->photos = implode(',', $photos);
+                $newOpeningServiceOrderItem->save();
+            }
+            */
         } else {
             $array['error'] = $validator->errors()->first();
+            return $array;
         }
         return $array;
     }
