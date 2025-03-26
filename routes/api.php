@@ -13,8 +13,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\WallController;
 use App\Http\Controllers\WarningController;
 use App\Http\Controllers\OpeningServiceOrderController;
-
-
+use App\Http\Controllers\PackageController;
 
 Route::get('/ping', function(){
     return ['pongo'=>true];
@@ -73,5 +72,7 @@ Route::middleware('auth:api')->group(function(){
     Route::post('/openingserviceorder', [OpeningServiceOrderController::class, 'setOpeningServiceOrder']);
     Route::post('/openingserviceorder/file', [OpeningServiceOrderController::class, 'addOpeningServiceOrderFile']);
 
-    //teste
+    //Encomendas - package
+    Route::get('/packages', [PackageController::class, 'getMyPackages']);
+
 });

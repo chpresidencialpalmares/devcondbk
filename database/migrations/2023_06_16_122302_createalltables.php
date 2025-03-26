@@ -113,7 +113,7 @@ return new class extends Migration
             $table->integer('id_area');
             $table->datetime('reservation_date');
         });
-        Schema::table('openingserviceorder', function(Blueprint $table) {
+        Schema::table('openingserviceorders', function(Blueprint $table) {
             $table->id();
             $table->integer('id_unit');
             $table->string('status');             
@@ -123,6 +123,23 @@ return new class extends Migration
             $table->string('problemtype');
             $table->string('sector');
         });
+
+        Schema::table('packages', function(Blueprint $table) {
+            $table->id();
+            $table->string('packagecode',);
+            $table->date('datecreated');
+            $table->date('colletctdate');
+            $table->string('status');
+            $table->integer('id_unit');
+            $table->string('destinationname');
+            $table->string('origin'); 
+            $table->string('type');
+            $table->string('collectname');
+            $table->string('collectrg');
+            $table->string('photos');
+            $table->string('user');
+        });
+
     }
 
     /**
