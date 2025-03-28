@@ -14,6 +14,7 @@ use App\Http\Controllers\WallController;
 use App\Http\Controllers\WarningController;
 use App\Http\Controllers\OpeningServiceOrderController;
 use App\Http\Controllers\PackageController;
+use App\Http\Controllers\RentalController;
 
 Route::get('/ping', function(){
     return ['pongo'=>true];
@@ -74,5 +75,17 @@ Route::middleware('auth:api')->group(function(){
 
     //Encomendas - package
     Route::get('/packages', [PackageController::class, 'getMyPackages']);
+
+    // Rental Aluguel de areas
+    Route::get('/rentals', [RentalController::class, 'getRentals']);
+    Route::post('/rental/{id}', [RentalController::class, 'setRental']);
+
+    Route::get('/rental/{id}/disableddates', [RentalController::class, 'getDisabledDates']);
+    //Route::get('/rental/{id}/times', [RentalController::class, 'getTimes']);
+
+    Route::get('/myrentals', [RentalController::class, 'getMyRentals']);
+    Route::delete('/myrental/{id}', [RentalController::class, 'delMyRental']);
+
+
 
 });

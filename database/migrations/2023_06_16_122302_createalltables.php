@@ -139,7 +139,54 @@ return new class extends Migration
             $table->string('photos');
             $table->string('user');
         });
+        
+        Schema::table('rental', function(Blueprint $table) {
+            $table->id();
+            $table->integer('id_unit');
+            $table->date('dateevent');
+            $table->integer('id_rentalarea');
+            $table->string('status');
+            $table->date('datecreated');
+            $table->string('user');
+        });
 
+        Schema::table('rentalarea', function(Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->text('description');
+            $table->string('textterms');
+            $table->integer('capacity');
+            $table->integer('price');
+            $table->string('photos');
+        });
+
+        schema::table('rentalpayment', function(Blueprint $table) {
+            $table->id();
+            $table->integer('id_rental');
+            $table->string('paymenttype');
+            $table->date('paymentdate');
+            $table->integer('paymentvalue');
+            $table->integer('paymentdiscount');
+            $table->string('paymentstatus');
+            $table->string('user');
+        });
+        Schema::table('rentaldisableday', function(Blueprint $table) {
+            $table->id();
+            $table->integer('id_rentalarea');
+            $table->date('initialdate');
+            $table->date('finaldate');
+            $table->string('description');
+        });
+
+        Schema::table('rentalhistoric', function(Blueprint $table) {
+            $table->id();
+            $table->integer('id_rental');
+            $table->date('dateevent');
+            $table->integer('id_rentalarea');
+            $table->string('user');
+            $table->string('action');
+            $table->date('datecreated');
+        });
     }
 
     /**
@@ -161,5 +208,12 @@ return new class extends Migration
         Schema::dropIfExists('areas');
         Schema::dropIfExists('areadisableddays');
         Schema::dropIfExists('reservations');
+        Schema::dropIfExists('openingserviceorders');
+        Schema::dropIfExists('packages');
+        Schema::dropIfExists('rental');
+        Schema::dropIfExists('rentalarea');
+        Schema::dropIfExists('rentalpayment');
+        Schema::dropIfExists('rentaldisableday');
+        Schema::dropIfExists('rentalhistoric');
     }
 };
