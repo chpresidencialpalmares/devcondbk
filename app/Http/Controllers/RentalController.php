@@ -144,19 +144,7 @@ class RentalController extends Controller
                     $can = false;
                 }
 
-                //Verificar se não existe outra reserva no mesmo dia/hora
-                	
-                /*
-                //original
-                $existingRentals = Rental::where('id_area', $id)
-                    ->where('rental_date', $date.' '.$time)
-                    ->count();
-
-                if($existingRentals > 0) {
-                    $can = false;
-                }
-                */
-
+                //Verificar se não existe outra reserva no mesmo dia
                 $existingRentals = Rental::where('id_rentalarea', $id)
                     ->where('dateevent', $date)
                     ->count();
@@ -195,143 +183,47 @@ class RentalController extends Controller
         return $array;
     }
 
-    public function getDisabledDates($id) {
+    public function getDisabledDates($id)
+    {
         $array = ['error' => '', 'list' => []];
-
+    
         $area = RentalArea::find($id);
-
-        if($area) {
-        // Dias Disabled padrão
-        $disabledDays = RentalDisableDay::where('id_rentalarea', $id)->get();
-
-        foreach($disabledDays as $disabledDay) {
-            $array['list'][] = $disabledDay['day'];
-        }
-
-        //Dias disabled atraves do allowed
-        $allowedDays = explode(',', $area['days']);
-        $offDays = [];
-
-        for($q=0;$q<7;$q++) {
-            if(!in_array($q, $allowedDays)) {
-                $offDays[] = $q;
-            }
-            
-        }
-
-        // Listar os dias proibidos 3 mes para frente
-        $start = time();
-        $end = strtotime('+5 months');
-        $current = $start;
-        $keep = true;
-
-        for(
-            $current = $start;
-            $current < $end;
-            $current = strtotime('+1 day', $current)
-        ) {
-            $wd = date('w', $current);
-            if(in_array($wd, $offDays)) {
-                $array['list'][] = date('Y-m-d', $current);
+        $arealimitdate = $area->rentallimitdate; // Pegue o limite da área
+    
+        if ($area) {
+            // Dias Disabled padrão
+            $disabledDays = RentalDisableDay::where('id_rentalarea', $id)->get();
+    
+            foreach ($disabledDays as $disabledDay) {
+                $start = $disabledDay->initialdate;
+                $end = $disabledDay->finaldate;
+    
+                // Garantir que finaldate não seja maior que rentallimitdate
+                if ($end > $arealimitdate) {
+                    $end = $arealimitdate; // Ajusta finaldate para rentallimitdate
+                }
+    
+                // Gerar o intervalo de datas entre initialdate e finaldate
+                $dates = [];
+    
+                // Se a data final for maior que a data inicial
+                if ($start <= $end) {
+                    // Gera o intervalo de datas
+                    $currentDate = \Carbon\Carbon::parse($start);
+                    while ($currentDate <= \Carbon\Carbon::parse($end)) {
+                        $dates[] = $currentDate->format('Y-m-d'); // Adiciona a data ao array
+                        $currentDate->addDay(); // Adiciona um dia ao loop
+                    }
+                }
+    
+                // Adiciona as datas desabilitadas ao array
+                $array['list'] = array_merge($array['list'], $dates);
             }
         }
-        
-        }else {
-            $array['error'] = 'Area inexistente';
-            return $array;
-        }
-
-
+    
         return $array;
     }
-    /*   
-    public function getTimes($id, Request $request) {
-        $array = ['error' => '', 'list' => []];
-
-        $validator = Validator::make($request->all(),[
-            'date' => 'required|date_format:Y-m-d'
-        ]);
-
-        if(!$validator->fails()) {
-            $date = $request->input('date');
-            $area = RentalArea::find($id);
-
-            if($area) {
-
-                $can = true;
-
-                // Verificar se é dia disabled
-                $existingDisabledDay = AreaDisabledDay::where('id_area',$id)
-                    ->where('day', $date )->count();
-                
-                if($existingDisabledDay > 0) {
-                    $can = false;
-                }
-
-                //Verificar se é dia permitido
-                $allowedDays = explode(',', $area['days']);
-                $weekday = date('w', strtotime($date));
-
-                if(!in_array($weekday, $allowedDays)) {
-                    $can = false;
-                }
-
-                if($can) {
-                    $start = strtotime($area['start_time']);
-                    $end = strtotime($area['end_time']);
-                    $times = [];
-
-                    for(
-                        $lastTime = $start;
-                        $lastTime < $end;
-                        $lastTime = strtotime('+1 hour', $lastTime)
-                    ) {
-                        $times[] = $lastTime;
-                    }
-
-                    $timeList = [];
-                    foreach($times as $time) {
-                        $timeList[] = [
-                            'id' => date('H:i:s', $time),
-                            'title' => date('H:i', $time). ' - '.date('H:i', strtotime('+1 hour', $time))
-                        ];
-                    }
-
-                    //Removendo as reservas
-                    $rentals = Rental::where('id_area', $id)
-                        ->whereBetween('rental_date', [
-                            $date.' 00:00:00',
-                            $date.' 23:59:59'
-                        ])
-                        ->get();
-
-                        $toRemove = [];
-
-                        foreach($rentals as $rental) {
-                            $time = date('H:i:s', strtotime($rental['rental_date']));
-                            $toRemove[] = $time;
-                        }
-
-                        foreach($timeList as $timeItem) {
-                            if(!in_array($timeItem['id'], $toRemove)) {
-                                $array['list'][] = $timeItem;
-                            }
-                        }
-
-                }
-
-            }else {
-                $array['error'] = 'Area inexistente';
-                return $array;
-            }
-        }else {
-            $array['error'] = $validator->errors()->first();
-            return $array;
-        }
-
-        return $array;
-    }
-    */
+  
     public function getMyRentals(Request $request) {
         $array = ['error' => '', 'list' => []];
 
@@ -344,22 +236,24 @@ class RentalController extends Controller
             if($unit) {
 
                 $rentals = Rental::where('id_unit', $property)
-                    ->orderBy('rental_date','DESC')
+                    ->orderBy('dateevent','DESC')
                     ->get();
 
                     foreach($rentals as $rental) {
-                        $area = RentalArea::find($rental['id_area']);
+                        $area = RentalArea::find($rental['id_rentalarea']);
 
-                        $daterev = date('d/m/Y H:i', strtotime($rental['rental_date']));
-                        $afterTime = date('H:i', strtotime('+1 hour',strtotime($rental['rental_date'])));
-                        $daterev .= ' á '.$afterTime;
+                        $daterev = date('d/m/Y', strtotime($rental['dateevent']));
+                        //$afterTime = date('H:i', strtotime('+1 hour',strtotime($rental['dateevent'])));
+                        //$daterev .= ' á '.$afterTime;
 
                         $array['list'][] = [
                             'id' => $rental['id'],
-                            'id_area' => $rental['id_area'],
+                            'id_area' => $rental['id_rentalarea'],
                             'title' => $area['title'],
                             'photos' => asset('storage/'.$area['photos']),
-                            'datereserved' => $daterev
+                            'datereserved' => $daterev,
+                            'user' => $rental['user'], 
+                            'status' => $rental['status']
                         ];
 
                     }
@@ -403,18 +297,3 @@ class RentalController extends Controller
     }
 }
 
-
-/*
-<?php
-
-namespace App\Http\Controllers;
-
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-
-class RentalController extends Controller
-{
-    //
-}
-
-*/
